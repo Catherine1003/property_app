@@ -18,99 +18,94 @@ class AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<AppDrawer> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
         color: Theme.of(context).scaffoldBackgroundColor,
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-
-            _buildDrawerHeader(context),
-            const SizedBox(height: AppTheme.spacing8),
-
-            _buildDrawerItem(
-              icon: Icons.analytics,
-              title: 'Analytics',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/analytics');
-              },
-            ),
-
-            const Divider(height: AppTheme.spacing16),
-
-            _buildThemeToggle(context),
-
-            const Divider(height: AppTheme.spacing16),
-
-            _buildDrawerItem(
-              icon: Icons.person,
-              title: 'Edit Profile',
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.settings,
-              title: 'Settings',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon')),
-                );
-              },
-            ),
-
-            _buildDrawerItem(
-              icon: Icons.help_outline,
-              title: 'Help & Support',
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Contact: support@propertyapp.com'),
-                  ),
-                );
-              },
-            ),
-
-            const Divider(height: AppTheme.spacing16),
-
-            _buildDrawerItem(
-              icon: Icons.info_outline,
-              title: 'About',
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog(context);
-              },
-            ),
-
+            // List of drawer items
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
+              child: ListView(
+                padding: EdgeInsets.zero,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(AppTheme.spacing16),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Property Listing App',
-                          style: Theme.of(context).textTheme.bodySmall,
+                  _buildDrawerHeader(context),
+                  const SizedBox(height: AppTheme.spacing8),
+
+                  _buildDrawerItem(
+                    icon: Icons.analytics,
+                    title: 'Analytics',
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/analytics');
+                    },
+                  ),
+
+                  const Divider(height: AppTheme.spacing16),
+
+                  _buildThemeToggle(context),
+
+                  const Divider(height: AppTheme.spacing16),
+
+                  _buildDrawerItem(
+                    icon: Icons.person,
+                    title: 'Edit Profile',
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                  _buildDrawerItem(
+                    icon: Icons.settings,
+                    title: 'Settings',
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Settings coming soon')),
+                      );
+                    },
+                  ),
+
+                  _buildDrawerItem(
+                    icon: Icons.help_outline,
+                    title: 'Help & Support',
+                    onTap: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Contact: support@propertyapp.com'),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'v1.0.0',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
+                      );
+                    },
+                  ),
+
+                  const Divider(height: AppTheme.spacing16),
+
+                  _buildDrawerItem(
+                    icon: Icons.info_outline,
+                    title: 'About',
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Bottom app info
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.spacing16),
+              child: Column(
+                children: [
+                  Text(
+                    'Property Listing App',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'v1.0.0',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -139,17 +134,16 @@ class _AppDrawerState extends State<AppDrawer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppTheme.spacing8),
-
           Container(
             width: 80,
             height: 80,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.white, width: 3)),
+              border: Border.all(color: AppColors.white, width: 3),
+            ),
             child: Icon(Icons.person, size: 40, color: AppColors.white),
           ),
           const SizedBox(height: AppTheme.spacing16),
-
           Text(
             "John Smith",
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -160,7 +154,6 @@ class _AppDrawerState extends State<AppDrawer> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppTheme.spacing4),
-
           Text(
             "john.smith@gmail.com",
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
