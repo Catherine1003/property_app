@@ -65,7 +65,7 @@ class PropertyRemoteDatasource {
         final properties = (data['properties'] as List?)
             ?.map((item) => PropertyModel.fromJson(item).toEntity())
             .toList() ?? [];
-        final total = data['count'] as int? ?? 0;
+        final total = data['totalProperties'] as int? ?? 0;
 
         return {
           'properties': properties,

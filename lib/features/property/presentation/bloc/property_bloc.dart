@@ -30,8 +30,10 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
       Emitter<PropertyState> emit,
       ) async {
     try {
-      emit(const PropertyLoading());
-      print("************ STEP 1");
+
+      if (event.isRefresh) {
+        emit(const PropertyLoading());
+      }
 
       final filter = _currentFilter.copyWith(
         minPrice: event.minPrice ?? _currentFilter.minPrice,
@@ -41,17 +43,14 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
         status: event.status ?? _currentFilter.status,
         page: event.isRefresh ? 1 : event.page,
       );
-      print("************ STEP 2");
 
       _currentFilter = filter;
       _currentPage = event.isRefresh ? 1 : event.page;
-      print("************ STEP 3");
 
       if (event.isRefresh) {
         _allProperties.clear();
       }
 
-      print("************ STEP 4");
       final result = await repository.getProperties(
         page: filter.page,
         pageSize: filter.pageSize,
@@ -61,19 +60,17 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
         tags: filter.tags.isEmpty ? null : filter.tags,
         status: filter.status,
       );
-      print("************ STEP 5");
+
+      final fetched = result['properties'] as List<Property>;
 
       if (event.isRefresh) {
-        _allProperties = List<Property>.from(result['properties'] as List);
+        _allProperties = List<Property>.from(fetched);
       } else {
-        _allProperties.addAll(result['properties'] as List<Property>);
+        _allProperties.addAll(fetched);
       }
 
-      print("************ STEP 6");
       _totalCount = result['total'] as int;
       final hasMore = _allProperties.length < _totalCount;
-
-      print("************ STEP 7 ${_allProperties.length} $_totalCount $_currentPage $hasMore ${_currentFilter.toString()}");
 
       emit(PropertyLoaded(
         properties: _allProperties,
@@ -82,8 +79,6 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
         hasMore: hasMore,
         currentFilter: _currentFilter,
       ));
-
-      print("************ STEP 8");
     } catch (e) {
       emit(PropertyError('Failed to load properties: $e'));
     }
@@ -93,37 +88,48 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
       LoadMorePropertiesEvent event,
       Emitter<PropertyState> emit,
       ) async {
-    if (state is PropertyLoaded) {
-      try {
-        emit(PropertyLoadingMore(_allProperties));
+    if (state is! PropertyLoaded) {
 
-        _currentPage++;
-        _currentFilter = _currentFilter.copyWith(page: _currentPage);
+      return;
+    }
 
-        final result = await repository.getProperties(
-          page: _currentPage,
-          pageSize: _currentFilter.pageSize,
-          minPrice: _currentFilter.minPrice,
-          maxPrice: _currentFilter.maxPrice,
-          location: _currentFilter.location,
-          tags: _currentFilter.tags.isEmpty ? null : _currentFilter.tags,
-          status: _currentFilter.status,
-        );
+    final currentState = state as PropertyLoaded;
 
-        _allProperties.addAll(result['properties'] as List<Property>);
-        _totalCount = result['total'] as int;
-        final hasMore = _allProperties.length < _totalCount;
+    if (!currentState.hasMore) {
+      return;
+    }
 
-        emit(PropertyLoaded(
-          properties: _allProperties,
-          totalCount: _totalCount,
-          currentPage: _currentPage,
-          hasMore: hasMore,
-          currentFilter: _currentFilter,
-        ));
-      } catch (e) {
-        emit(PropertyError('Failed to load more: $e'));
-      }
+    try {
+
+      _currentPage = currentState.currentPage + 1;
+      _currentFilter = _currentFilter.copyWith(page: _currentPage);
+
+      final result = await repository.getProperties(
+        page: _currentPage,
+        pageSize: _currentFilter.pageSize,
+        minPrice: _currentFilter.minPrice,
+        maxPrice: _currentFilter.maxPrice,
+        location: _currentFilter.location,
+        tags: _currentFilter.tags.isEmpty ? null : _currentFilter.tags,
+        status: _currentFilter.status,
+      );
+
+      final newProperties = result['properties'] as List<Property>;
+
+      _allProperties.addAll(newProperties);
+      _totalCount = result['total'] as int? ?? _totalCount;
+
+      final hasMore = _allProperties.length < _totalCount;
+
+      emit(PropertyLoaded(
+        properties: _allProperties,
+        totalCount: _totalCount,
+        currentPage: _currentPage,
+        hasMore: hasMore,
+        currentFilter: _currentFilter,
+      ));
+    } catch (e) {
+      emit(PropertyError('Failed to load more: $e'));
     }
   }
 
@@ -172,7 +178,8 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
     _currentPage = 1;
     _allProperties.clear();
 
-    add(const FetchPropertiesEvent());
+
+    add(const FetchPropertiesEvent(isRefresh: true));
   }
 
   Future<void> _onFetchDetails(

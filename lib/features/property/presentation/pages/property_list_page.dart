@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../../../config/app_colors.dart';
 import '../../../../config/app_theme.dart';
 import '../../domain/entities/property.dart';
@@ -18,22 +20,21 @@ class PropertyListScreen extends StatefulWidget {
 }
 
 class _PropertyListScreenState extends State<PropertyListScreen> {
-  late ScrollController _scrollController;
-  late PageStorageKey<String> storageKey;
-
-  static const int initialPageSize = 10;
-  static const int nextPageLoadThreshold = 5;
-  static const int itemsPerPage = 10;
+  late final ScrollController _scrollController;
+  final storageKey = const PageStorageKey('property_list');
 
   String _currentVisibleIndex = "";
   bool _isLoadingMore = false;
 
+
+  PropertyState? _latestState;
+
   @override
   void initState() {
     super.initState();
-    storageKey = const PageStorageKey('property_list');
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
+    _scrollController = ScrollController()
+      ..addListener(_onScroll);
+
 
     context.read<PropertyBloc>().add(
       const FetchPropertiesEvent(
@@ -41,30 +42,29 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
         isRefresh: true,
       ),
     );
-
-
-
   }
 
   void _onScroll() {
-    final state = context.read<PropertyBloc>().state;
+    if (!_scrollController.hasClients) return;
 
+    final state = _latestState;
     if (state is! PropertyLoaded) return;
 
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.offset;
-    final threshold = maxScroll - (itemsPerPage * 100);
+    final current = _scrollController.position.pixels;
+    final max = _scrollController.position.maxScrollExtent;
 
-    if (currentScroll >= threshold &&
+    const preload = 600;
+
+    if (max - current <= preload &&
         state.hasMore &&
         !_isLoadingMore) {
+
       _isLoadingMore = true;
 
+      context.read<PropertyBloc>().add(const LoadMorePropertiesEvent());
+
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          context.read<PropertyBloc>().add(const LoadMorePropertiesEvent());
-          _isLoadingMore = false;
-        }
+        if (mounted) _isLoadingMore = false;
       });
     }
   }
@@ -77,7 +77,10 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
       builder: (_) => FilterBottomSheet(
         onApplyFilter: (filter) {
 
-          _scrollController.jumpTo(0);
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
+
           context.read<PropertyBloc>().add(FilterPropertiesEvent(filter));
           Navigator.pop(context);
         },
@@ -87,6 +90,7 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -111,6 +115,8 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
       body: BlocBuilder<PropertyBloc, PropertyState>(
         builder: (context, state) {
 
+          _latestState = state;
+
           if (state is PropertyInitial || state is PropertyLoading) {
             return _buildInitialShimmerLoader(isMobile);
           }
@@ -120,14 +126,17 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
           }
 
           if (state is PropertyLoaded) {
-
             if (state.properties.isEmpty) {
               return _buildEmptyState(context);
             }
 
             return RefreshIndicator(
               onRefresh: () async {
-                _scrollController.jumpTo(0);
+
+                if (_scrollController.hasClients) {
+                  _scrollController.jumpTo(0);
+                }
+
                 context.read<PropertyBloc>().add(
                   const FetchPropertiesEvent(isRefresh: true),
                 );
@@ -163,6 +172,10 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
   }
 
   Widget _buildErrorState(BuildContext context) {
+    final message = context.read<PropertyBloc>().state is PropertyError
+        ? (context.read<PropertyBloc>().state as PropertyError).message
+        : 'Failed to load properties';
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -174,9 +187,7 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
           ),
           const SizedBox(height: AppTheme.spacing16),
           Text(
-            context.read<PropertyBloc>().state is PropertyError
-                ? (context.read<PropertyBloc>().state as PropertyError).message
-                : 'Failed to load properties',
+            message,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -239,7 +250,6 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
       padding: const EdgeInsets.all(AppTheme.spacing16),
       itemCount: state.properties.length + (state.hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-
         if (index == state.properties.length) {
           return Padding(
             padding: const EdgeInsets.symmetric(
@@ -277,7 +287,6 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
   }
 
   void _trackPropertyVisibility(BuildContext context, Property property) {
-
     if (_currentVisibleIndex != property.id) {
       _currentVisibleIndex = property.id;
 
@@ -290,6 +299,10 @@ class _PropertyListScreenState extends State<PropertyListScreen> {
     }
   }
 }
+
+
+
+
 
 class _PropertyCardLazy extends StatefulWidget {
   final Property property;
@@ -318,8 +331,6 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
     return GestureDetector(
       key: _cardKey,
       onTap: () {
-
-        print("************ STEP 1");
         context.read<PropertyBloc>().add(
           TrackPropertyInteractionEvent(
             propertyId: widget.property.id,
@@ -327,13 +338,11 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
           ),
         );
 
-        print("************ STEP 2");
         Navigator.pushNamed(
           context,
           '/property-detail',
           arguments: widget.property,
         );
-        print("************ STEP 3");
       },
       child: Card(
         elevation: 2,
@@ -343,7 +352,6 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             _LazyPropertyImage(
               imageUrl: widget.property.images[0],
               status: widget.property.status,
@@ -355,7 +363,6 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,8 +375,7 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
                               widget.property.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style:
-                              Theme.of(context).textTheme.titleMedium,
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: AppTheme.spacing4),
                             Row(
@@ -385,9 +391,7 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
                                     widget.property.location?.city ?? "",
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall,
+                                    style: Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ),
                               ],
@@ -421,8 +425,7 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
                       const SizedBox(width: AppTheme.spacing8),
                       _FeatureChip(
                         icon: Icons.straighten,
-                        label:
-                        '${widget.property.area.toStringAsFixed(0)} m²',
+                        label: '${widget.property.area.toStringAsFixed(0)} m²',
                       ),
                     ],
                   ),
@@ -440,8 +443,7 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
                           fontSize: 11,
                         ),
                         padding: EdgeInsets.zero,
-                        materialTapTargetSize:
-                        MaterialTapTargetSize.shrinkWrap,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ))
                           .toList(),
                     ),
@@ -455,71 +457,6 @@ class _PropertyCardLazyState extends State<_PropertyCardLazy> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

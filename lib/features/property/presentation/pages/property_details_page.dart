@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -87,8 +89,8 @@ class _PropertyDetailsPageState extends State<PropertyDetailsPage> {
                   width: double.infinity,
                   fit: BoxFit.cover,
                 )
-                : Image.asset(
-                  url,
+                : Image.file(
+                  File(url),
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ));
