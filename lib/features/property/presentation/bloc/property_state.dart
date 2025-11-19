@@ -60,68 +60,6 @@ class PropertyError extends PropertyState {
   List<Object?> get props => [message];
 }
 
-class PropertyDetailsLoading extends PropertyState {
-  const PropertyDetailsLoading();
-}
-
-class PropertyDetailsLoaded extends PropertyState {
-  final Property property;
-
-  const PropertyDetailsLoaded(this.property);
-
-  @override
-  List<Object?> get props => [property];
-}
-
-class PropertyDetailsError extends PropertyState {
-  final String message;
-
-  const PropertyDetailsError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ImageUploadingState extends PropertyState {
-  const ImageUploadingState();
-}
-
-class ImageUploadedState extends PropertyState {
-  final String imageUrl;
-
-  const ImageUploadedState(this.imageUrl);
-
-  @override
-  List<Object?> get props => [imageUrl];
-}
-
-class ImageUploadErrorState extends PropertyState {
-  final String message;
-
-  const ImageUploadErrorState(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class LocationsLoaded extends PropertyState {
-  final List<String> locations;
-
-  const LocationsLoaded(this.locations);
-
-  @override
-  List<Object?> get props => [locations];
-}
-
-class TagsLoaded extends PropertyState {
-  final List<String> tags;
-
-  const TagsLoaded(this.tags);
-
-  @override
-  List<Object?> get props => [tags];
-}
-
 class MostViewedPropertiesLoaded extends PropertyState {
   final List<Map<String, dynamic>> properties;
 

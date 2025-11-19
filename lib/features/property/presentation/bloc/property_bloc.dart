@@ -17,11 +17,7 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
     on<LoadMorePropertiesEvent>(_onLoadMore);
     on<FilterPropertiesEvent>(_onFilter);
     on<ResetFiltersEvent>(_onResetFilters);
-    on<FetchPropertyDetailsEvent>(_onFetchDetails);
-    on<UploadPropertyImageEvent>(_onUploadImage);
     on<TrackPropertyInteractionEvent>(_onTrackInteraction);
-    on<FetchLocationsEvent>(_onFetchLocations);
-    on<FetchTagsEvent>(_onFetchTags);
     on<FetchMostViewedEvent>(_onFetchMostViewed);
   }
 
@@ -182,35 +178,6 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
     add(const FetchPropertiesEvent(isRefresh: true));
   }
 
-  Future<void> _onFetchDetails(
-      FetchPropertyDetailsEvent event,
-      Emitter<PropertyState> emit,
-      ) async {
-    try {
-      emit(const PropertyDetailsLoading());
-      final property = await repository.getPropertyDetails(event.propertyId);
-      emit(PropertyDetailsLoaded(property));
-    } catch (e) {
-      emit(PropertyDetailsError('Failed to load property: $e'));
-    }
-  }
-
-  Future<void> _onUploadImage(
-      UploadPropertyImageEvent event,
-      Emitter<PropertyState> emit,
-      ) async {
-    try {
-      emit(const ImageUploadingState());
-      final imageUrl = await repository.uploadImage(
-        event.propertyId,
-        event.imagePath,
-      );
-      emit(ImageUploadedState(imageUrl));
-    } catch (e) {
-      emit(ImageUploadErrorState('Upload failed: $e'));
-    }
-  }
-
   Future<void> _onTrackInteraction(
       TrackPropertyInteractionEvent event,
       Emitter<PropertyState> emit,
@@ -219,30 +186,6 @@ class PropertyBloc extends Bloc<PropertyEvent, PropertyState> {
       event.propertyId,
       event.action,
     );
-  }
-
-  Future<void> _onFetchLocations(
-      FetchLocationsEvent event,
-      Emitter<PropertyState> emit,
-      ) async {
-    try {
-      final locations = await repository.getLocations();
-      emit(LocationsLoaded(locations));
-    } catch (e) {
-      print('Error fetching locations: $e');
-    }
-  }
-
-  Future<void> _onFetchTags(
-      FetchTagsEvent event,
-      Emitter<PropertyState> emit,
-      ) async {
-    try {
-      final tags = await repository.getTags();
-      emit(TagsLoaded(tags));
-    } catch (e) {
-      print('Error fetching tags: $e');
-    }
   }
 
   Future<void> _onFetchMostViewed(

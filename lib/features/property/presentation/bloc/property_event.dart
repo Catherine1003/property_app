@@ -74,19 +74,6 @@ class FetchPropertyDetailsEvent extends PropertyEvent {
   List<Object?> get props => [propertyId];
 }
 
-class UploadPropertyImageEvent extends PropertyEvent {
-  final String propertyId;
-  final String imagePath;
-
-  const UploadPropertyImageEvent({
-    required this.propertyId,
-    required this.imagePath,
-  });
-
-  @override
-  List<Object?> get props => [propertyId, imagePath];
-}
-
 class TrackPropertyInteractionEvent extends PropertyEvent {
   final String propertyId;
   final String action;
@@ -98,14 +85,6 @@ class TrackPropertyInteractionEvent extends PropertyEvent {
 
   @override
   List<Object?> get props => [propertyId, action];
-}
-
-class FetchLocationsEvent extends PropertyEvent {
-  const FetchLocationsEvent();
-}
-
-class FetchTagsEvent extends PropertyEvent {
-  const FetchTagsEvent();
 }
 
 class FetchMostViewedEvent extends PropertyEvent {

@@ -30,25 +30,6 @@ class PropertyRepositoryImpl {
       status: status,
     );
   }
-
-  Future<Property> getPropertyDetails(String propertyId) async {
-    final property = await apiService.fetchPropertyDetails(propertyId);
-    await analyticsService.trackPropertyView(propertyId, property.title);
-    return property;
-  }
-
-  Future<String> uploadImage(String propertyId, String imagePath) async {
-    return await apiService.uploadPropertyImage(propertyId, imagePath);
-  }
-
-  Future<List<String>> getLocations() async {
-    return await apiService.fetchLocations();
-  }
-
-  Future<List<String>> getTags() async {
-    return await apiService.fetchTags();
-  }
-
   Future<void> trackPropertyInteraction(String propertyId, String action) async {
     await analyticsService.trackPropertyInteraction(
       propertyId,
